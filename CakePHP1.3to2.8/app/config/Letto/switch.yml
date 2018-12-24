@@ -1,0 +1,11 @@
+---
+switched:
+  cakephp28:
+    - /mypage
+    - /mypage/
+    - /user/login
+    - /user/login/*
+    - /user/logout
+    - /user/logout/*
+    - /work/detail
+    - /work/detail/*

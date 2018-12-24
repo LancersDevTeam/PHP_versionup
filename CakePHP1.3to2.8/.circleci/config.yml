@@ -1,0 +1,92 @@
+---
+version: 2
+jobs:
+  build:
+    working_directory: ~/lancers
+    docker:
+      - image: thatsamguy/trusty-php71:latest
+        environment:
+          CHATWORK_RID_CI_NOTIFICATION: XXXXXXXX
+          DB_HOST: 127.0.0.1
+          MEMCACHED_HOST: 127.0.0.1
+          REDIS_HOST: 127.0.0.1
+          TZ: "/usr/share/zoneinfo/Asia/Tokyo"
+          RUBYOPT: -EUTF-8
+      - image: circleci/mysql:5.6
+        environment:
+          TZ: "/usr/share/zoneinfo/Asia/Tokyo"
+          MYSQL_USER: lancers
+          MYSQL_ALLOW_EMPTY_PASSWORD: true
+      - image: memcached:latest
+        environment:
+          TZ: "/usr/share/zoneinfo/Asia/Tokyo"
+      - image: redis:latest
+        environment:
+          TZ: "/usr/share/zoneinfo/Asia/Tokyo"
+    steps:
+      - checkout
+#      - setup_remote_docker:
+#          reusable: true
+      - run: |
+          pear channel-update pear.php.net
+          pear install Crypt_Blowfish
+      - run:
+          name: 'Copy: tests config'
+          command: |
+            cp cake28/Test/Config/core.php cake28/Config/
+            cp cake28/Test/Config/database.php cake28/Config/
+            cp cake28/Test/Config/operation_mode.php /usr/local/src/
+      - run:
+          name: 'Setup: php.ini'
+          command: |
+            sed -i -e 's|;date\.timezone =|date.timezone = "Asia/Tokyo"|' /etc/php/7.1/cli/php.ini
+            sed -i -e 's|short_open_tag = Off|short_open_tag = On|' /etc/php/7.1/cli/php.ini
+      - restore_cache:
+          name: restore composer cache
+          keys:
+            - composer-lancers-{{ .Branch }}-{{ checksum "composer.lock" }}
+            - composer-lancers-{{ .Branch }}
+            - composer-lancers
+      - run: php composer.phar install -n --prefer-dist
+      - save_cache:
+          key: composer-lancers-{{ .Branch }}-{{ checksum "composer.lock" }}
+          paths:
+            - ./app/vendors/composers
+      - run:
+          name: 'Create diff file lists'
+          command: /bin/bash cake28/Test/CodingChecker/php/diff_files.sh $CIRCLE_BRANCH
+      - run:
+          name: 'RUN: php syntax check.'
+          command: /bin/bash cake28/Test/CodingChecker/php/syntax.sh $CIRCLE_BRANCH $CIRCLE_USERNAME $CIRCLE_BUILD_URL $CHATWORK_TOKEN
+      - run: |
+          ruby cake28/Test/CodingChecker/checker_for_migration_cake28.rb $CIRCLE_BRANCH $CIRCLE_USERNAME $CIRCLE_BUILD_URL $CHATWORK_TOKEN
+      - run:
+          name: 'RUN: NPath check'
+          command: |
+            if [ "${CIRCLE_BRANCH}" != "master" ]; then
+              /bin/bash cake28/Test/CodingChecker/php/npath.sh
+            fi
+      - run:
+          name: 'RUN: phpcs'
+          command: |
+            if [ "${CIRCLE_BRANCH}" != "master" ]; then
+              /bin/bash cake28/Test/CodingChecker/php/phpcs.sh $CIRCLE_BRANCH $CIRCLE_USERNAME $CIRCLE_BUILD_URL $CHATWORK_TOKEN
+            fi
+      - run:
+          name: 'RUN: phpmd'
+          command: |
+            if [ "${CIRCLE_BRANCH}" != "master" ]; then
+              /bin/bash cake28/Test/CodingChecker/php/phpmd.sh
+            fi
+      - run:
+          name: 'RUN: check helper'
+          command: |
+            if [ "${CIRCLE_BRANCH}" != "master" ]; then
+              /bin/bash cake28/Test/CodingChecker/php/helper.sh $CIRCLE_BRANCH $CIRCLE_USERNAME $CIRCLE_BUILD_URL $CHATWORK_TOKEN
+            fi
+      #- run:
+          #name: 'RUN: php tests'
+          #command: /bin/bash cake28/Test/CodingChecker/php/tests.sh
+      - run:
+          name: send messages to chatwork
+          command: /bin/bash cake28/Test/CodingChecker/send_messages.sh cisuccessful $CIRCLE_BRANCH $CIRCLE_USERNAME $CIRCLE_BUILD_URL $CHATWORK_TOKEN

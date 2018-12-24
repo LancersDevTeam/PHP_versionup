@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<ruleset name="LancersCustom">
+    <description>Customize Coding standards for Lancers</description>
+
+    <arg name="encoding" value="utf-8" />
+    <arg name="extensions" value="php" />
+    <ini name="memory_limit" value="1G"/>
+    <exclude-pattern>*/app/Plugin/*</exclude-pattern>
+    <exclude-pattern>*/app/config/*</exclude-pattern>
+    <exclude-pattern>*/app/controllers/components/*</exclude-pattern>
+    <exclude-pattern>*/app/models/*</exclude-pattern>
+    <exclude-pattern>*/cake28/Test/*</exclude-pattern>
+    <exclude-pattern>*/app/tmp/*</exclude-pattern>
+    <exclude-pattern>*/app/vendors/*</exclude-pattern>
+    <exclude-pattern>*/app/views/helpers/*</exclude-pattern>
+    <exclude-pattern>*/app/webroot/*</exclude-pattern>
+    <exclude-pattern>*controller.php</exclude-pattern>
+    <exclude-pattern>*error.php</exclude-pattern>
+    <exclude-pattern>*model.php</exclude-pattern>
+
+    <!-- Include the whole PSR2 standard -->
+    <rule ref="PSR2">
+        <exclude name="PSR1.Classes.ClassDeclaration" />
+        <exclude name="PSR2.Namespaces.UseDeclaration" />
+        <exclude name="PSR2.Classes.PropertyDeclaration" />
+        <exclude name="PSR2.Methods.MethodDeclaration" />
+        <exclude name="PEAR.NamingConventions.ValidFunctionName" />
+        <exclude name="PEAR.NamingConventions.ValidVariableName" />
+        <exclude name="PEAR.Commenting.ClassComment" />
+        <exclude name="PEAR.Commenting.FileComment" />
+        <exclude name="PEAR.Commenting.FileComment.MissingCategoryTag" />
+        <exclude name="PEAR.Commenting.FileComment.MissingPackageTag" />
+        <exclude name="PEAR.Commenting.FileComment.MissingLinkTag" />
+        <exclude name="PEAR.Commenting.FileComment.MissingVersion" />
+        <exclude name="PEAR.Functions.FunctionCallSignature" />
+        <exclude name="Generic.Files.LineLength" />
+        <exclude name="Generic.WhiteSpace.ScopeIndent" />
+    </rule>
+
+    <!-- Customize Rule -->
+    <rule ref="Generic.Files.LineLength">
+        <properties>
+            <!-- エラーは出さない -->
+            <property name="lineLimit" value="0"/>
+            <!-- 85文字オーバーで警告 -->
+            <property name="absoluteLineLimit" value="85"/>
+        </properties>
+    </rule>
+    <rule ref="Generic.WhiteSpace.ScopeIndent">
+        <properties>
+            <!-- インデントはスペース4個 / tabは許容しない -->
+            <property name="indent" value="4"/>
+            <property name="tabIndent" value="false"/>
+        </properties>
+    </rule>
+
+</ruleset>

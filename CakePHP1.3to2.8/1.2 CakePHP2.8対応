@@ -1,0 +1,250 @@
+## cake28の書き方に対応する
+
+下記対象ファイルごとの記述変更をしてください。
+
+参考: [移行ガイド](https://book.cakephp.org/2.0/ja/appendices/2-0-migration-guide.html)
+
+---
+
+### 全ての関連するファイル
+
+- a() → array()
+  - a()は廃止された
+- am() → array_merge()
+  - am()はCakePHP3で廃止予定
+    - array_mergeは第二引数にnullを入れられないので注意！
+- モデルのvalidationErrorsは構造が変わっているので、いい感じに対応する
+```
+# cake13の構造
+‌   $this->Menu->validationErrors
+ array (
+  'description' => '詳細が入力されていません',
+)
+
+# cake28の構造
+  $this->Menu->validationErrors
+ array (
+  'description' =>
+  array (
+    0 => '詳細が入力されていません',
+  ),
+)
+```
+
+参考: https://github.com/LancersDevTeam/lancers_cakephp/pull/14943
+
+---
+
+### ControllerとViewの両方
+
+参考: https://github.com/LancersDevTeam/lancers_cakephp/pull/12592
+
+- $this->action → $this->request->action
+- $this->params['action'] → $this->request->action
+- $this->data → $this->request->data
+- $this->params['data'] → $this->request->data
+- $this->here → $this->request->here
+- $this->header → $this->request->header
+- $this->webroot → $this->request->webroot
+- $this->params['form'] → $this->request->data
+  - ajax系の取得で書かれていることが多い
+  - cake28では$this->params['form']で取得できない
+- $this->params['url']['url'] → $this->request->url
+- $this->params['url'] → $this->request->query
+- $this->request->params['url'] → $this->request->query
+- $this->params → $this->request->params
+- $this->RequestHandler->isXXX → $this->request->is('xxx')
+  - 一部例外あり: https://book.cakephp.org/2.0/ja/controllers/request-response.html
+- header() → $this->response->header()
+  - 書き方は以下のどちらでも動くか、引数を明示的に分けた方が安心
+  - $this->response->header('key: value')
+  - $this->response->header($key, $value)
+- $this->RequestHandler->setContent('json')は以下の2つで置き換える
+  - $this->response->type('json')
+  - $this->response->charset('UTF-8')
+- $this->render()を呼んでいる場合はViewのディレクトリ名を大文字始まりにする
+  - $this->render('/store/feature_list') → $this->render('/Store/feature_list')
+- `<?php __(...); ?>`
+  - `<?= __(...); ?>` に書き換える
+
+---
+
+### Controller
+
+- new XxxHelper() → new XxxHelper(new View())
+- $this->Auth->allow('*') → $this->Auth->allow()
+- $this->Auth->allow(array('*')) → $this->Auth->allow()
+- `$helpers`などのload定義で大文字小文字の注意
+  - https://github.com/LancersDevTeam/lancers_cakephp/pull/14099#issuecomment-384163072
+- beforeFilterとかで$this->Security->formCheckをいじっている場合の対応
+  - フォーム改竄チェックは $this->Security->validatePost
+  - CSRFチェックは $this->Security->csrfCheck
+  - 参考: https://github.com/LancersDevTeam/lancers_cakephp/pull/14375/files#r188163592
+- `cakeError()`はcake28に存在しない
+  - e.g) `cakeError('error404');`の場合は`return $this->_error404();`に修正
+- `$this->_error404()`は挙動が変わっています。明示的にreturnしてください
+  - cake13: 呼び出したその場でexitする
+  - cake28: render結果を(メソッドの戻り値として)returnするだけ
+    ```diff
+             if (empty($id) || !is_numeric($id)) {
+    -            $this->_error404();
+    +            return $this->_error404();
+             }
+    ```
+- `$helpers`に`Form`がある場合は指定を消す
+  ```
+  移行するコントローラーで`$helpers`に`Form`が入っている場合は削除するようにお願いします。
+  `Form`はAppControllerで指定しており、かつ「勝手にrequired属性を付けないように」という対応が入っています。
+  子クラスで`Form`を再指定しているとその対応が無効になっちゃうので、requiredが勝手に付いてしまいます
+  ```
+  - 参考: https://github.com/LancersDevTeam/lancers_cakephp/pull/16078#issuecomment-415306763
+- POST判定
+  - `if (!empty($this->data))` → `$this->request->is('post')`
+  - 入力値が空の場合、cake28では`if (!empty($this->data))`がtrueにならない
+    - cake13の頃はCSRF用のtokenなどがあれば$this->dataに入っていたので問題なかった
+
+---
+
+### Component
+
+- extends Object → extends Component
+- new XxxComponent() → new XxxComponent(new ComponentCollection())
+
+### View
+
+- $lancers, $htmlは それぞれ$this->Lancers, $this->Html
+- $sessionは$this->Session
+- $paginatorは$this->Paginator
+- elementのパスが変わっているものはパスを修正する
+  - $this->element('email/text/receive_email_alert') 
+  - $this->element('Emails/text/receive_email_alert')
+  - 以下、パターン列挙(あれば追記していってください)
+    - `email` → `Emails`
+- PHPショートタグをロングタグに修正`<?`→`<?php`
+  - CakePHP2.8対応ではスコープ外としても良い
+    - PHP5.6対応でまとめて実施する予定
+- $this->set('title_for_layout, ...)は$this->assign('title', ...)に変更する
+  - 参考: https://github.com/LancersDevTeam/lancers_cakephp/pull/13158#discussion_r169271856
+- `__(`関数の対応（主に管理画面）
+  - 第2引数の対応が必要
+    - 参考：https://github.com/LancersDevTeam/lancers_cakephp/pull/13517/files#r174686915
+  - `<?php __(`→`<?= __(`に変更する
+    - 参考：https://github.com/LancersDevTeam/lancers_cakephp/pull/16783
+- `$this->Paginator->sort`
+  - 第1引数と第2引数を入れ替える
+
+---
+
+### Model/Entity/Serviceなど
+
+主に名前空間の対応。
+
+- そのクラスや該当するコントローラーから呼んでいる場合、namespace付きに変更する
+    - namespaceなしの場合だとcake13が呼ばれるので注意
+    - Category → \App\Lib\Entities\Category
+- EntityやServiceなどnamespaceが付いたクラスでは、DateUtilやExceptionなどを絶対参照にする
+    - Exception → \Exception
+
+
+### ModelバリデーションのnotEmptyは非推奨なのでnotBlankに変更する
+
+※非推奨なだけで実行はできるが、noticeが出力される  
+
+一括で対応している( #12548 )ので、その後に追加されたモデルだけ注意。  
+`notEmpty`が実行される書き方(修正が必要なケース)を整理しておく。  
+
+**notEmpty()が実行される**
+
+ケース1:  
+
+```
+    public $validate = array(
+        'customer_number' => array('notEmpty'),
+    );
+```
+
+ケース2:  
+
+```
+    public $validate = array(
+        'customer_number' => array(
+            array('rule' => 'notEmpty')
+        ),
+    );
+```
+
+**notEmpty()が実行されない**
+
+ケース1: key名が`notEmpty`というだけで実体の`rule`が別のパターン。  
+
+```
+    public $validate = array(
+        'notEmpty' => array(...),
+    );
+```
+
+ケース2: `required => true`がある場合は先にそっちで弾かれるので`notEmpty()`は実行されない。  
+
+```
+    public $validate = array(
+        'customer_number' => array(
+            array('rule' => 'notEmpty', 'required' => true)
+        ),
+    );
+```
+
+
+---
+
+## その他注意すること
+
+Cacheを使っている場合はキーの大文字小文字に注意する。
+
+(特にCacheの動作確認は漏れがちなので注意)
+
+参考: https://github.com/LancersDevTeam/lancers_cakephp/pull/13561
+
+基本的にキャメルケース → スネークケースでの対応としている。
+
+## cake28移行スクリプト
+
+以下の移行スクリプトを使うと楽に移行できます。
+
+init_for_cake28.rb
+```
+cake13 = ARGV[0]
+
+printf("git checkout -b feature/cake28%s\n", cake13.gsub(/^app\/controllers/,'').gsub(/\//,'_').gsub(/\.php/,''))
+
+cake28 =  'cake28/Controller' + cake13.gsub(/^app\/controllers/,'').gsub(/\.php/,'').split(/\//).map { |v| v.split(/[^[:alnum:]]+/).map(&:capitalize).join }.join('/') + '.php'
+
+printf("git mv %s %s\n", cake13, cake28)
+printf("git ci %s %s\n", cake13, cake28)
+
+File.open(cake13) do |f|
+  f.each_line do |line|
+    if /(sendEmail|LMail::create)/.match(line) then
+      puts 'Warnings copy mail template'
+      print line
+    end
+  end
+end
+
+
+cake28_view = cake28.gsub(/^cake28\/Controller/,'cake28/View').gsub(/\.php/,'').gsub(/Controller/,'')
+printf("mkdir -p %s\n", cake28_view)
+
+cake13_view = cake13.gsub(/^app\/controllers/,'app/views').gsub(/_controller\.php/,'')
+printf("cp %s/* %s\n", cake13_view, cake28_view)
+printf("git add %s\n", cake28_view)
+printf("git ci %s\n", cake28_view)
+
+puts "Add app/config/Letto/switch.yml"
+switch_base = cake13.gsub(/^app\/controllers/,'').gsub(/_controller\.php/,'')
+printf("\t- %s\n\t- %s/*\n", switch_base, switch_base)
+```
+
+実行方法
+```
+ruby init_for_cake28.rb app/controllers/admin/faqs_controller.php
+```

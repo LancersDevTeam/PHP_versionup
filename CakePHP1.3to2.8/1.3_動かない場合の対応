@@ -1,0 +1,565 @@
+## 動かない場合の対応 - 試される忍耐力
+
+もしエラーになった場合は以下のケースに該当するものがないか参考にしてください。
+
+---
+
+### CSRFエラーで弾かれる
+
+コントローラーのbeforeFilterを修正する。  
+`$this->Security`はAppControllerでセットされるため、`parent::beforeFilter()`より後に記述する。  
+
+```
+    public function beforeFilter()
+    {
+        parent::beforeFilter();
+
+        // フォーム改竄チェックをskipしたい場合はfalseにする
+        $this->Security->validatePost = false;
+        // CSRFチェックをskipしたい場合はfalseにする
+        $this->Security->csrfCheck = false;
+    }
+```
+
+---
+
+### CSRFエラーで弾かれるpart2
+
+HTMLのinput typeがimageの場合は`x`、`y`(座標)が勝手に送信されるため`validatePost`で失敗する。  
+
+参考: https://github.com/LancersDevTeam/lancers_cakephp/pull/16925#discussion_r222533656
+
+---
+
+### ajaxがCSRFエラーで弾かれる
+
+表示がcake13でajaxがcake28の場合はCSRF対応が必要になる。
+
+参考: https://github.com/LancersDevTeam/lancers_cakephp/pull/13429#discussion_r173342538
+
+---
+
+### authエラーで弾かれる
+
+`SecurityComponent#_validatePost()`で落ちている場合。  
+cake13ではスルーされていたが、cake28ではチェックされるようになったために落ちている。  
+
+- cake13: `FormHelper`を使ったフォームからのPOSTの場合のみチェックする
+- cake28: POSTであれば全てチェックする
+
+対応: `$this->Security->validatePost = false`にすればOK。[例](https://github.com/LancersDevTeam/lancers_cakephp/blob/32b3cd04ec280696adc6dbec4a5cc0bdd2a7dca2/cake28/Controller/LansearchController.php#L32)  
+
+もう少し詳しく: https://github.com/LancersDevTeam/lancers_cakephp/pull/14960#discussion_r195629962
+
+---
+
+### authエラーで弾かれる(複数submit)
+
+フォーム改ざんチェックの項目に「表示時のURLとPOST時のURLが一致すること」があるので、複数のsubmitにてjsで動的にURLを書き換えていると通らない。  
+
+`Form->submit()`で`name`を指定することで複数設置できる、という情報はあるのだが、なぜか`name`を取得できなかった。  
+cake以前に`$_POST`に入ってこず。キレイじゃないけどhiddenで凌ぐ。  
+参考: https://github.com/LancersDevTeam/lancers_cakephp/pull/17730/commits/636f1f9fceaba229e677b7e4d93c864c56839ee0
+
+---
+
+### 確認画面で送信をしても更新されない
+
+確認->完了画面の場合にリクエストではなくセッションでデータを持ち回しているケースがあります。
+
+そのためリクエスト時は空POSTが飛んできて、コントローラーの条件分岐で弾かれます。
+
+(cake13の場合はTokenがPOSTに含まれていたので通っていた)
+
+参考: https://github.com/LancersDevTeam/lancers_cakephp/pull/13326#discussion_r176671726
+
+---
+
+### DBのqueryメソッドの仕様について
+
+以下のif文は、
+
+Cake1.3では、UPDATEのときtrueを返すが、
+
+Cake2.8では、UPDATEのときArray(0)を返してfalseとなってしまう。
+```
+        if ($this->Work->query($updateQuery)) {
+```
+Cake2.8では、UPDATE、DELETEで
+
+値が更新されなかったらtrue
+
+値が更新されたら、array(0)
+
+を返すようになる。
+
+---
+### find関数で、第一引数に検索パラメータ(conditionsとか)を指定している
+
+ → 第二引数に検索パラメータを指定するようにし、第一引数はallやfirstにする
+
+---
+
+### Modelを呼び出す際に、App::import()で読み込んでからnewしている
+
+ → ClassRegistry::init(Model名) で読み込むようにする
+
+---
+
+### XmlHelper, AjaxHelper, JavascriptHelperの削除
+
+- AjaxHelper, JavascriptHelper
+    - => JsHelperとHtmlHelperに置き換えられたので利用しているメソッドを確認のうえ修正
+- XmlHelper
+    - => `Cake/Utility/Xml`を使うらしい
+
+参考: http://weble.org/2012/03/27/cakephp-xml-ajax-javascript-remove
+
+---
+
+### LibやCore、Componentでは`App::import()`が利用できなくなっているため`App::uses()`に置き換える
+
+---
+
+### `PHP Fatal error: Unsupported operand types` エラーが出力される
+
+FormHelper::selectの扱い方が変わった
+
+- selectedが必要な場合は、FormHelper::inputに変更が必要
+  - e.g.) `$this->Form->input($fieldName, $options);`
+- 参考
+  - https://github.com/LancersDevTeam/lancers_cakephp/pull/18095/files
+    - cake28/View/Work/create_private_start.ctp
+  - https://github.com/LancersDevTeam/lancers_cakephp/pull/18273/commits/7c7f04e8ecd51b1102812fc456c3d8a73b2ca208
+---
+
+### Modelが読み込めないときはテーブルの複数形が間違ってるときがある
+`$useTable`で指定する
+
+---
+
+### JSが読み込めない
+
+テンプレートで`$this->Html->script('/js/hoge')`だったら`$this->Html->script('/js/hoge.js')`にする  
+(拡張子(js)までちゃんと付けるようにする)
+
+
+---
+
+### 必要なconfigファイルがcake28に存在しない。  
+`app/config`配下だけでなく、
+`cake28/Config/`配下に、cake13と同じファイル名で作成する必要があります。
+特に設定値をいじる必要がない場合は、cake13のconfigをloadする形を取っています。  
+
+例: `holiday.php`  
+```php
+<?php
+// 冗長になるため、cake1.3のモノを読み込む
+// cake2.8移行完了時に置き換えられます
+require ROOT . '/app/config/holiday.php';
+```
+
+---
+
+### configがロードできない。
+
+```
+<?php 
+$config = array();
+```
+を入れる
+
+---
+
+### モデルの`validates()`で落ちる。  
+
+→`fieldList`には配列を渡すこと。  
+
+`$this->validates(array('fieldList' => array('results'))`
+
+---
+
+### 大文字小文字の区別はdevでは再現しない。  
+参考: https://github.com/LancersDevTeam/lancers_cakephp/pull/14099#issuecomment-384163072
+
+```
+2018-04-25 14:09:36 Error: [MissingHelperException] Helper class textHelper could not be found.
+Exception Attributes: array (
+  'class' => 'textHelper',
+  'plugin' => false,
+)
+```
+
+---
+
+### 「入力内容をご確認ください。」等が表示されフォームで確認画面から完了画面に遷移できない。
+
+確認画面→完了画面をセッション持ち回してデータを保持している場合に発生する。
+
+解決方法：下記をフォーム内に配置
+```
+<? // post時に$this->request->dataがemptyだとデータが保存できないため一時的にhiddenでカバー refs #xxxx ?>
+<?= $this->Form->hidden('fromConfirm', array('value' => true)) ?>
+```
+
+原因についてはこちらを参考： https://github.com/LancersDevTeam/lancers_cakephp/pull/13326/files/52114dd31c23c6b8c0712f2a38beb636739ae846#diff-0441bd3b7b1931df4442fee35ba523ab
+
+---
+
+### `Using key action is deprecated`というNoticeが出る
+
+> Notice: Using key `action` is deprecated, use `url` directly instead in cakephp
+
+以下のように変更
+```
+$this->Form->create('UserExpert', array('action' => 'update_status')); ?>
+```
+↓
+```
+$this->Form->create('UserExpert', array('url' => 'update_status')); ?>
+```
+
+参考：https://github.com/LancersDevTeam/lancers_cakephp/pull/16338/commits/7b757afacb3798732c475edae9772350523a48a6
+
+---
+
+### `$paginate has no effect`というNoticeが出る
+
+> Notice: Indirect modification of overloaded property QuestionsController::$paginate has no effect in /var/www/lancers/cake28/Controller/Admin/QuestionsController.php on line 34
+
+こちらを参照ください: https://github.com/LancersDevTeam/lancers_cakephp/pull/16070#issuecomment-411306410
+
+---
+
+### `Paginator->sort`が効いていない(Helper編)  
+(view側でPaginatorHelperを使ってリンクを生成しているケース)  
+`title`と`key`を渡している場合は、順序を入れ替えてください。定義が変わっています。  
+
+
+cake13  
+```
+function sort($title, $key = null, $options = array()) {
+```
+
+cake28  
+```
+function sort($key, $title = null, $options = array()) {
+```
+
+---
+
+### cake13では動いたがcake28では動かないorderByの書き方  
+
+**ページング(Paginator)を利用している場合のみ**、 こういう「arrayの中に文字列」方法だと効かない。  
+
+```
+'order' => array('Voice.id desc'),
+```
+
+以下のどちらかに修正する。  
+```
+// ちゃんとkey, valueを設定すれば大丈夫
+'order' => array('Voice.id' => 'desc')
+
+// こっちもいまは通るけどそのうちNGになりそうな予感
+'order' => 'Voice.id desc'
+```
+
+参考: https://lancers.kibe.la/@sayakob/361
+
+---
+
+### ページングのURLが変わってしまって期待通りに動かない
+
+```
+cake13とcake28で生成されるページングURLが異なる。
+
+cake13
+https://dev.lancers.jp/admin/hoge/index/page:2/condition:?nickname=nickname_1&ip=
+
+cake28
+https://dev.lancers.jp/admin/hoge/index/condition:%3Fnickname%3Dnickname_1%26ip%3D/page:2
+
+cake28の方はクエリストリングになっていません。
+細かく追えていないが、Paginator->options()でurlを指定した場合の挙動が違うっぽい。
+```
+
+詳細はこちら。  
+https://github.com/LancersDevTeam/lancers_cakephp/pull/16078#issuecomment-418036366
+
+---
+
+### ページングにおいて、エイリアスによる並び替えが効かない
+
+cake2系では、存在しないカラムでのorder byが効かない(ページングの場合のみ)  
+バーチャルフィールドに定義を追加する必要がある。  
+
+詳細はこちら。  
+https://github.com/LancersDevTeam/lancers_cakephp/pull/17019#discussion_r225394433
+
+---
+
+### ページングにおいて、JOIN先のカラムによる並び替えが効かない
+
+cake2系では、JOIN先のカラムでのorder byが効かない(ページングの場合のみ)  
+バーチャルフィールドに定義を追加する必要がある。  
+
+詳細はこちら。  
+https://github.com/LancersDevTeam/lancers_cakephp/pull/17019#discussion_r225394593
+
+---
+
+### `$this->cakeError('error404')`の呼び出しエラー
+
+`cakeError`は2.8では廃止になっているので、以下の呼び出しに変更してください。  
+注: 移行済みのコントローラーで`throw new NotFoundException()`にしているところは、以下の方法を知らなかったためです。
+
+```
+# AppController->_error404の呼び出し
+
+$this->_error404();
+```
+
+---
+
+### モデルのvalidationErrorsの構造が変わっている。  
+https://github.com/LancersDevTeam/lancers_cakephp/wiki/1.2-Cake28%E5%AF%BE%E5%BF%9C に書いてあるので参照。
+
+---
+
+### モデルのfindにてcontainとfieldsを両方指定すると、取れる値がバージョン間で異なる
+参考: https://github.com/LancersDevTeam/lancers_cakephp/pull/13665#issuecomment-377174370  
+
+`contain`の指定が2階層以降だと発生する。1階層なら挙動の違いはなさそう。  
+https://github.com/LancersDevTeam/lancers_cakephp/pull/15189#discussion_r199686896
+
+```
+cake13: contain対象はfields指定しなくてもすべてのカラムが取得される
+cake28: contain対象にもfields指定が必要。そうしないとidカラムしか取得されない
+```
+
+---
+
+### insert前のモデルにおける`$this->id`の値がバージョン間で異なる
+参考: https://github.com/LancersDevTeam/lancers_cakephp/pull/14958  
+
+```
+cake13: $this->idがfalseになっていて、isset($this->id)はtrueになる
+cake28: $this->idがnullになっていて、isset($this->id)はfalseになる
+```
+
+---
+
+### tinyint(1)のカラム取得結果がbooleanになってしまう
+
+**原因**
+
+`tinyint(1)`のカラムを`find`した時の挙動がcake1とcake2では異なります。  
+
+|cake1|cake2|
+|---|---|
+|そのまま数値|true/falseに変換|
+
+**対応**
+
+この自動変換を止めるオプションやフックみたいなものは存在しないので、残念ながら明示的に`(int)`してキャストする必要がある。
+
+**補足**
+
+- 更新時にtrue/false -> intへ自動変換はしてくれないので、「findした結果をそのまま登録に使う」とSQLエラーで落ちる  
+- `debug()`や`LLogger::llog()`などphpの出力関数によっては`false`をnullまたは空文字として扱われる(非表示になる)ので注意
+    - `false`が空文字として出力されるのはphpの仕様
+    - ログだけではなくCSV出力などにも影響していそう？
+
+**おまけ:該当しているcakeのコード部分**
+
+まずDBの型を判定する部分。`boolean`で定義してあるか`tinyint(1)`なら、cake的には`boolean`として扱いますよ、という処理。  
+
+```
+// app/vendors/composers/cakephp/cakephp/lib/Cake/Model/Datasource/Database/Mysql.php
+
+if (($col === 'tinyint' && $limit === 1) || $col === 'boolean') {
+  return 'boolean';
+}
+```
+
+そして`find`した時に呼ばれる`fetchResult`のコード。  
+細かい部分は飛ばして、`$this->boolean($resultRow[$table][$column])`に注目。  
+さきほど判定した型が`boolean`の場合、`$this->boolean()`を呼び出して変換した値を取得結果にしている。  
+
+```
+// app/vendors/composers/cakephp/cakephp/lib/Cake/Model/Datasource/Database/Mysql.php
+
+public function fetchResult() {
+  if ($row = $this->_result->fetch(PDO::FETCH_NUM)) {
+    $resultRow = array();
+    foreach ($this->map as $col => $meta) {
+      list($table, $column, $type) = $meta;
+      $resultRow[$table][$column] = $row[$col];
+      if ($type === 'boolean' && $row[$col] !== null) {
+        $resultRow[$table][$column] = $this->boolean($resultRow[$table][$column]);
+      }
+    }
+    return $resultRow;
+  }
+  $this->_result->closeCursor();
+  return false;
+}
+```
+
+最後は`$this->boolean()`の中身。  
+
+```
+// app/vendors/composers/cakephp/cakephp/lib/Cake/Model/Datasource/DboSource.php
+
+public function boolean($data, $quote = false) {
+  if ($quote) {
+    return !empty($data) ? '1' : '0';
+  }
+  return !empty($data);
+}
+```
+
+0/1に戻しているかと思いきや、上記の`fetchResult`からは引数の`$quote`が未指定なのでそのif文は通らない。  
+つまり常にbooleanで返る。  
+
+---
+
+### `mysql_real_escape_string`の呼び出しでエラー
+
+=> `Sanitize::escape`を使います。  
+(`App::uses('Sanitize', 'Utility');`を忘れずに)  
+
+Sanitizeは3.0で廃止されますが、2.8対応ではひとまずこれで行きます。  
+https://book.cakephp.org/2.0/ja/core-utility-libraries/sanitize.html
+
+> Sanitize クラスは、 2.4 から非推奨で、CakePHP 3.0 で削除されます。
+
+---
+
+### PDOException
+
+(適切な見出しが浮かばなかった)  
+
+```
+title: [PDOException] SQLSTATE[HY000]: General error: 1290 The MySQL server is running with the --read-only option so it cannot execute this statement
+```
+
+以下の条件にて発生する。  
+
+- pre以降
+- slaveを向いている
+- `SELECT FOR UPDATE`が呼ばれる
+
+詳細: https://github.com/LancersDevTeam/lancers_cakephp/pull/14556
+
+---
+
+### フォームの項目が入力必須になってしまう
+cake28の `FormHelper` では、(該当モデルにrequired属性がある場合)勝手にrequiredを付ける仕様となっている。
+
+`AppController` で対応を入れてあるものの、子クラスで `FormHelper` を呼ぶと、cake28標準の上記挙動に戻ってしまう。
+
+`Form` を読み込まないようにすることで対応可能。 
+```diff
+-    public $helpers = array('Html', 'Form', 'Admin');
++    public $helpers = array('Html', 'Admin');
+```
+
+詳細: https://github.com/LancersDevTeam/lancers_cakephp/pull/16078#issuecomment-415306763
+
+---
+
+### title_for_layoutを設定してもview側でfetch('title')できない
+
+layoutをnullにしたりautoLayoutがfalseになっているせいでcakeの`renderLayout`が呼ばれていない可能性がある。  
+対応方法は状況によって違うかもしれないので、下記を呼んで動きを把握して対応していただけると 🙏   
+参照: https://github.com/LancersDevTeam/lancers_cakephp/pull/17152#issuecomment-432120491
+
+---
+
+### `Warning: vsprintf(): Too few arguments` が表示される
+
+`__` 関数の第2引数を削除すればよい。　 [※関連情報](https://github.com/LancersDevTeam/lancers_cakephp/wiki/1.2-Cake28%E5%AF%BE%E5%BF%9C#view)
+
+```diff
+- __('hoge', true)
++ __('hoge')
+```
+
+---
+
+### Form->inputやForm->hiddenで`.xxx`のようにドット始まりで指定
+
+cake13の時はドット始まりにすると、生成されるnameやidにモデル名が付かない。  
+cake28では(通常通り)付く。  
+例: `$this->Form->hidden('.category_id')`  
+
+- ドットなし => `data[Model名][categoriy_id]`
+- ドットあり => `data[categoriy_id]`
+
+参考: https://github.com/LancersDevTeam/lancers_cakephp/pull/17655#issuecomment-440927733  
+対応: https://github.com/LancersDevTeam/lancers_cakephp/pull/17655/commits/fbd8a895baa7a207c5de07a443b2b226d0367bd7
+
+---
+
+### Form->checkboxで`value=''`を指定した時の違い
+
+```
+$this->Form->checkbox("foo", array('value' => ''));
+```
+
+- cake13 => valueは'1'になる。emptyなvalueは1に上書きされる。
+  - https://github.com/LancersDevTeam/lancers_cakephp/blob/526d50498c9c504aeb478ca691ddca1d235c8d60/cake/libs/view/helpers/form.php#L1008-L1009
+- cake28 => 指定した値のまま。空文字やnullはそのまま扱われる。
+
+
+### バリデーションエラーが発生するとArrayが表示される
+
+#### 「入力内容が全て消える」ことの仮説
+
+- バリデーションエラー発生 => Array表示
+- バリデーションエラーなので更新はされていない
+  - この時点では入力内容は(見た目上)残っている
+- DB的には更新されていないので、リロードすると入力内容が消えている
+
+#### 「Array」と表示される原因
+
+モデルの`validationErrors`構造がcake28から変わっているため。
+
+```
+# cake13の構造
+‌‌$this->Menu->validationErrors
+‌array (
+  'description' => '詳細が入力されていません',
+)
+
+# cake28の構造
+‌‌$this->Menu->validationErrors
+‌array (
+  'description' =>
+  array (
+    0 => '詳細が入力されていません',
+  ),
+)
+```
+
+- 参考
+  - https://github.com/LancersDevTeam/lancers_cakephp/pull/14943
+  - https://github.com/LancersDevTeam/lancers_cakephp/pull/17654
+
+### superagentによるajaxはCakePHPではajaxとして判断されない
+
+`superagent`によるajax通信の場合、Cake側の`$this->request->is('ajax')`は`false`である。
+
+#### 原因
+
+Cakeの`request->is('ajax')`はリクエストヘッダーの`X-Requested-With`が`XMLHttpRequest `の場合に`true`を返す。
+参考: app/vendors/composers/cakephp/cakephp/lib/Cake/Network/CakeRequest.php:509
+
+このヘッダーはjQueryが勝手に付けるヘッダーだが、superagentでは廃止されている。
+https://github.com/visionmedia/superagent/issues/189
+
+#### 対応
+
+superagentの呼び出し側で明示的に`X-Requested-With`ヘッダーを付けるしかないと思われる。

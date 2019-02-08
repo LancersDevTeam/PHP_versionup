@@ -1,17 +1,14 @@
 #!/bin/env ruby
 # coding: utf-8
 
-
 branch    = ARGV[0]
 username  = ARGV[1]
 build_url = ARGV[2]
-token     = ARGV[3]
 
 root_path = Dir::pwd
 target_list_file_path = '/tmp/diff.log'
 
 results = Hash.new
-
 
 def update_hash(results,file,key,line,line_num)
   results[file] = Hash.new() unless results.key?(file)
@@ -31,24 +28,35 @@ File.open(target_list_file_path) do |target_list_file|
       line_num = 1
       f.each_line do |line|
         line.chomp!
-        if /(this->(here|header|webroot|data[^a-zA-Z]|params|action|RequestHandler|params\['form'\]))/.match(line) ||
+        # class名とファイル名が一致するかチェック
+        if /^class *(.+?(?:Behavior|Component|Controller))/.match(line) then
+          controller_name = $1
+          if !file.include?(controller_name) then
+            update_hash(results,file,controller_name,line,line_num)
+          end
+        # $this->params系チェック
+        elsif /(this->(here|header|webroot|data[^a-zA-Z]|params|action|RequestHandler|params\['form'\]))/.match(line) ||
           /(cakeError)/.match(line) ||
           /(this->Auth->allow\((array\('\*'\)\)|\('\*'\)))/.match(line) then
           update_hash(results,file,$1,line,line_num)
-        elsif /(Cache::(?:read|write)\(\s*'(.*?)')/.match(line) then 
+        # Cacheキーチェック
+        elsif /(Cache::(?:read|write)\(\s*'(.*?)')/.match(line) then
           target    = $1
           cache_key = $2
           if /[A-Z]/.match(cache_key) then
             update_hash(results,file,target,line,line_num)
           end
+        # $this->set系チェック
         elsif /^cake28\/View.+$/.match(file) &&
           /(this->set)/.match(line) then
           update_hash(results,file,$1,line,line_num)
+        # $this-render系チェック
         elsif /this->render\(["'](.*?)["']\)/.match(line) then
           render_path = $1
           if /^\/?[a-z].*?\//.match(render_path) then
             update_hash(results,file,render_path,line,line_num)
           end
+        # $this->elementの大文字始まりチェック
         elsif /this->element\(["'](.*?)["']/.match(line) then
           render_path = $1
           if render_path.start_with?('Emails') || render_path.start_with?('/Emails') then
@@ -65,10 +73,9 @@ end
 
 exit!(0) if results.size == 0
 
+cakephp28_log = '/tmp/cakephp28.log'
 
-tmp_migration_cake28_log = '/tmp/migration_chake28.log'
-
-File.open(tmp_migration_cake28_log,'w') do |f|
+File.open(cakephp28_log,'w') do |f|
   results.each do |file,value|
     value.each do |match,num_lines|
       num_lines.each do |num_line|
@@ -78,6 +85,6 @@ File.open(tmp_migration_cake28_log,'w') do |f|
   end
 end
 
-system("sh #{root_path}/cake28/Test/CodingChecker/send_messages.sh 'cifailed' #{branch} #{username} #{build_url} #{token} #{tmp_migration_cake28_log}")
+system("sh #{root_path}/cake28/Test/CodingChecker/send_messages.sh 'cifailed' #{branch} #{username} #{build_url} #{cakephp28_log}")
 
 exit!

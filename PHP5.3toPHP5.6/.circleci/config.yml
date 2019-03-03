@@ -1,0 +1,108 @@
+---
+version: 2
+jobs:
+  build:
+    working_directory: /var/www/lancers
+    docker:
+      - image: xxxxxxxxxxx.dkr.ecr.ap-northeast-1.amazonaws.com/lancers_app:latest
+        aws_auth:
+          aws_access_key_id: $AWS_ACCESS_KEY_ID
+          aws_secret_access_key: $AWS_SECRET_ACCESS_KEY
+        environment:
+          TZ: /usr/share/zoneinfo/Asia/Tokyo
+          DB_HOST: 127.0.0.1
+#          MEMCACHED_HOST: 127.0.0.1
+#          REDIS_HOST: 127.0.0.1
+      - image: xxxxxxxxxxx.dkr.ecr.ap-northeast-1.amazonaws.com/mysql:latest
+        aws_auth:
+          aws_access_key_id: $AWS_ACCESS_KEY_ID
+          aws_secret_access_key: $AWS_SECRET_ACCESS_KEY
+        environment:
+          TZ: /usr/share/zoneinfo/Asia/Tokyo
+#      - image: memcached:1.4.34
+#        environment:
+#          TZ: /usr/share/zoneinfo/Asia/Tokyo
+#      - image: circleci/redis:5.0
+#        environment:
+#          TZ: /usr/share/zoneinfo/Asia/Tokyo
+    steps:
+      - setup_remote_docker:
+          docker_layer_caching: true
+          reusable: true
+      - checkout
+      - restore_cache:
+          name: 'Restore Composer Cache'
+          keys:
+            - composer-lancers-{{ .Branch }}-{{ checksum "composer.lock" }}
+            - composer-lancers-{{ .Branch }}
+            - composer-lancers
+      - run: php composer.phar install -n --prefer-dist
+      - save_cache:
+          name: 'Save Composer Cache'
+          key: composer-lancers-{{ .Branch }}-{{ checksum "composer.lock" }}
+          paths:
+            - /var/www/lancers/vendor
+      - run:
+          name: 'Create Diff File Lists'
+          command: /bin/bash cake28/Test/CodingChecker/diff_files.sh $CIRCLE_BRANCH
+      - run:
+          name: 'Setup CakePHP Config'
+          command: |
+            export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
+            export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+            aws s3 cp s3://${S3_BUCKET}/core.php.cake28 cake28/Config/core.php
+            cp cake28/Test/Config/database.php cake28/Config/
+            cp cake28/Test/Config/operation_mode.php /usr/local/src/
+      - run:
+          name: 'Make tmp Directory'
+          command: /bin/bash cake28/Test/Config/make_tmp.sh
+      - run:
+          name: 'PHP Syntax Check'
+          command: /bin/bash cake28/Test/CodingChecker/php/syntax.sh $CIRCLE_BRANCH $CIRCLE_USERNAME $CIRCLE_BUILD_URL
+      - run:
+          name: 'CakePHP2.8 Check'
+          command: ruby -Ku cake28/Test/CodingChecker/cakephp/cakephp28.rb $CIRCLE_BRANCH $CIRCLE_USERNAME $CIRCLE_BUILD_URL
+#      - run:
+#          name: 'RUN: NPath check'
+#          command: |
+#            if [ "${CIRCLE_BRANCH}" != "master" ]; then
+#              /bin/bash cake28/Test/CodingChecker/php/npath.sh
+#            fi
+      - run:
+          name: 'php-cs-fixer'
+          command: |
+            if [ "${CIRCLE_BRANCH}" != "master" ]; then
+              /bin/bash cake28/Test/CodingChecker/php/php-cs-fixer.sh $CIRCLE_BRANCH $CIRCLE_USERNAME $CIRCLE_BUILD_URL
+            fi
+#      - run:
+#          name: 'phpmd'
+#          command: |
+#            if [ "${CIRCLE_BRANCH}" != "master" ]; then
+#              /bin/bash cake28/Test/CodingChecker/php/phpmd.sh $CIRCLE_BRANCH $CIRCLE_USERNAME $CIRCLE_BUILD_URL
+#            fi
+      - run:
+          name: 'Check Helper'
+          command: |
+            if [ "${CIRCLE_BRANCH}" != "master" ]; then
+              /bin/bash cake28/Test/CodingChecker/php/helper.sh $CIRCLE_BRANCH $CIRCLE_USERNAME $CIRCLE_BUILD_URL
+            fi
+      - run:
+          name: 'Wait for MySQL'
+          command: |
+            for i in $(seq 10)
+            do
+              mysql -h 127.0.0.1 -u lancers -e 'show databases' || (sleep 1; false) && break
+            done
+      - run:
+          name: 'CakePHP Unit Test'
+          command: /bin/bash cake28/Test/CodingChecker/cakephp/unittest.sh $CIRCLE_BRANCH $CIRCLE_USERNAME $CIRCLE_BUILD_URL
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - build:
+          filters:
+            branches:
+              ignore: 
+                - master

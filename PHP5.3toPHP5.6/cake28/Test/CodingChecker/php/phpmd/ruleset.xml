@@ -1,0 +1,72 @@
+<?xml version="1.0"?>
+<ruleset name="LancersCustom"
+         xmlns="http://pmd.sf.net/ruleset/1.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://pmd.sf.net/ruleset/1.0.0
+                     http://pmd.sf.net/ruleset_xml_schema.xsd"
+         xsi:noNamespaceSchemaLocation="
+                     http://pmd.sf.net/ruleset_xml_schema.xsd">
+    <description>Customize Coding standards for Lancers</description>
+
+    <rule ref="rulesets/cleancode.xml">
+        <!-- if文のelse終わりを許可 -->
+        <exclude name="ElseExpression" />
+        <!-- static呼び出しを許可 -->
+        <exclude name="StaticAccess" />
+    </rule>
+
+    <rule ref="rulesets/codesize.xml">
+        <!-- メソッドサイズ除外(後で設定) -->
+        <exclude name="ExcessiveMethodLength" />
+        <!-- クラスサイズ除外 -->
+        <exclude name="ExcessiveClassLength" />
+        <!-- メソッドの引数の数除外(後で設定) -->
+        <exclude name="ExcessiveParameterList" />
+        <!-- publicプロパティ/メソッド数上限を除外 -->
+        <exclude name="ExcessivePublicCount" />
+        <!-- プロパティ数上限を除外 -->
+        <exclude name="TooManyFields" />
+        <!-- メソッド数上限を除外(後で設定) -->
+        <exclude name="TooManyMethods" />
+        <!-- publicメソッド数上限を除外(後で設定) -->
+        <exclude name="TooManyPublicMethods" />
+        <!-- クラス複雑度を除外 -->
+        <exclude name="ExcessiveClassComplexity" />
+    </rule>
+
+    <rule ref="rulesets/design.xml">
+        <!-- クラス依存を除外 -->
+        <exclude name="CouplingBetweenObjects" />
+    </rule>
+
+    <rule ref="rulesets/naming.xml">
+        <!-- 最小変数文字数のカウントを除外 -->
+        <exclude name="ShortVariable" />
+        <!-- 最大変数文字数のカウントを除外 -->
+        <exclude name="LongVariable" />
+    </rule>
+
+    <rule ref="rulesets/unusedcode.xml" />
+
+    <!-- codesize の再設定 -->
+    <rule ref="rulesets/codesize.xml/ExcessiveMethodLength">
+        <properties>
+            <property name="minimum" value="100" />
+        </properties>
+    </rule>
+    <rule ref="rulesets/codesize.xml/ExcessiveParameterList">
+        <properties>
+            <property name="minimum" value="5" />
+        </properties>
+    </rule>
+    <rule ref="rulesets/codesize.xml/TooManyMethods">
+        <properties>
+            <property name="minimum" value="25" />
+        </properties>
+    </rule>
+    <rule ref="rulesets/codesize.xml/TooManyPublicMethods">
+        <properties>
+            <property name="minimum" value="15" />
+        </properties>
+    </rule>
+</ruleset>

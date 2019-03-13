@@ -1,0 +1,6 @@
+- PHP 5.3.x から PHP 5.4.x への移行
+  - http://php.net/manual/ja/migration54.php
+- PHP 5.4.x から PHP 5.5.x への移行
+  - http://php.net/manual/ja/migration55.php
+- PHP 5.5.x から PHP 5.6.x への移行
+  - http://php.net/manual/ja/migration56.php

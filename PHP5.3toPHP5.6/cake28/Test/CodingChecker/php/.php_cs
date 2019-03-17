@@ -23,7 +23,6 @@ return PhpCsFixer\Config::create()
         'whitespace_after_comma_in_array' => true,
         // bracesが原因で、インデントが崩れてしまう。各項目の全パターンを試したが、エラーが直らなかった
         // バグ的だがbracesを空にすると、崩れたインデントを修正できるようになるので、こうした
-        // #19218 #19273
         'braces' => array()
     ))
     ->setUsingCache(false)

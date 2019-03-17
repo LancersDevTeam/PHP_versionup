@@ -1,0 +1,8 @@
+- PHP 5.6.x から PHP 7.0.x への移行
+  - http://php.net/manual/ja/migration70.php
+- PHP 7.0.x から PHP 7.1.x への移行
+  - http://php.net/manual/ja/migration71.php
+- PHP 7.1.x から PHP 7.2.x への移行
+  - http://php.net/manual/ja/migration72.php
+- PHP 7.2.x から PHP 7.3.x への移行
+  - http://php.net/manual/ja/migration73.php

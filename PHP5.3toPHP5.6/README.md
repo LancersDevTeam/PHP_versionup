@@ -4,3 +4,5 @@
   - http://php.net/manual/ja/migration55.php
 - PHP 5.5.x から PHP 5.6.x への移行
   - http://php.net/manual/ja/migration56.php
+- AWS SDK for PHP のバージョン 2 からのアップグレード
+  - https://docs.aws.amazon.com/ja_jp/sdk-for-php/v3/developer-guide/getting-started_migration.html

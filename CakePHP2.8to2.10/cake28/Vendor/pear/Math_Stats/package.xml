@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<package packagerversion="1.9.0" version="2.0" xmlns="http://pear.php.net/dtd/package-2.0" xmlns:tasks="http://pear.php.net/dtd/tasks-1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pear.php.net/dtd/tasks-1.0 http://pear.php.net/dtd/tasks-1.0.xsd http://pear.php.net/dtd/package-2.0 http://pear.php.net/dtd/package-2.0.xsd">
+ <name>Math_Stats</name>
+ <channel>pear.php.net</channel>
+ <summary>Classes to calculate statistical parameters</summary>
+ <description>Package to calculate statistical parameters of numerical arrays
+of data. The data can be in a simple numerical array, or in a 
+cummulative numerical array. A cummulative array, has the value
+as the index and the number of repeats as the value for the
+array item, e.g. $data = array(3=&gt;4, 2.3=&gt;5, 1.25=&gt;6, 0.5=&gt;3).
+Nulls can be rejected, ignored or handled as zero values.</description>
+ <lead>
+  <name>Jesus M. Castagnetto</name>
+  <user>jmcastagnetto</user>
+  <email>jmcastagnetto@php.net</email>
+  <active>yes</active>
+ </lead>
+ <date>2010-10-04</date>
+ <time>22:39:26</time>
+ <version>
+  <release>0.9.1</release>
+  <api>0.9.0</api>
+ </version>
+ <stability>
+  <release>beta</release>
+  <api>beta</api>
+ </stability>
+ <license uri="http://www.php.net/license">PHP</license>
+ <notes>
+QA release
+Bug #17924 	frequency and test suite broken
+ </notes>
+ <contents>
+  <dir baseinstalldir="/" name="/">
+   <file baseinstalldir="/" md5sum="87216bb6aadf871f941ee9f7337a3a43" name="contrib/ignatius_reilly/f_cumulative_normal_dist.php" role="php" />
+   <file baseinstalldir="/" md5sum="1ad37f105043b65176fabae1f06d14ba" name="contrib/ignatius_reilly/msg.txt" role="data" />
+   <file baseinstalldir="/" md5sum="217b015ad13fad6cc6f0ea3133176007" name="contrib/ignatius_reilly/ndist_tabulated.php" role="php" />
+   <file baseinstalldir="/" md5sum="155b44a1abf5b6975f695539fc9a6028" name="docs/README-Math_Stats" role="doc" />
+   <file baseinstalldir="/" md5sum="ed82df45ab60ce417e4d467f29b459ea" name="docs/examples/bigcummulativedata.dat" role="doc" />
+   <file baseinstalldir="/" md5sum="80fe164540c65e39540353036791f8dc" name="docs/examples/ex_stats_bigdataset.php" role="doc" />
+   <file baseinstalldir="/" md5sum="86259102f97ff924467a7f3b64208556" name="docs/examples/ex_stats_cummulative_data.php" role="doc" />
+   <file baseinstalldir="/" md5sum="6cb955d576053cc06af03aa235698d3b" name="docs/examples/ex_stats_simple.php" role="doc" />
+   <file baseinstalldir="/" md5sum="38375662888986b7f75b913f286d0f92" name="Math/Stats.php" role="php" />
+   <file baseinstalldir="/" md5sum="e94fcc731b9f0b9d37e8a97149a860d9" name="tests/AllTests.php" role="test" />
+   <file baseinstalldir="/" md5sum="615133f4091f431f07151fd55f2b9646" name="tests/Math_StatsTest.php" role="test" />
+   <file baseinstalldir="/" md5sum="91ef36bc4f148b912f7922720905d5a9" name="tests/test_Math_Stats_instance_methods-data.php" role="test" />
+  </dir>
+ </contents>
+ <dependencies>
+  <required>
+   <php>
+    <min>4.2</min>
+   </php>
+   <pearinstaller>
+    <min>1.4.0b1</min>
+   </pearinstaller>
+  </required>
+ </dependencies>
+ <phprelease />
+ <changelog>
+  <release>
+   <version>
+    <release>0.8.0</release>
+    <api>0.8.0</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <date>2002-05-15</date>
+   <license uri="http://www.php.net/license">PHP</license>
+   <notes>
+Initial release
+   </notes>
+  </release>
+  <release>
+   <version>
+    <release>0.8.1</release>
+    <api>0.8.1</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <date>2002-05-23</date>
+   <license uri="http://www.php.net/license">PHP</license>
+   <notes>
+Bug fix in __sumdiff() and in __sumabsdev(), which made
+the variance, standard deviation, etc. be calculated incorrectly.
+   </notes>
+  </release>
+  <release>
+   <version>
+    <release>0.8.3</release>
+    <api>0.8.3</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <date>2002-05-23</date>
+   <license uri="http://www.php.net/license">PHP</license>
+   <notes>
+Another bug fix release. Version 0.8.2 was not released due
+to wrong tags and bugs.
+   </notes>
+  </release>
+  <release>
+   <version>
+    <release>0.8.4</release>
+    <api>0.8.4</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <date>2003-05-16</date>
+   <license uri="http://www.php.net/license">PHP</license>
+   <notes>
+Fixed problem in element selection for the calculation
+of the median. Thanks to Jeff Hoover for finding this bug.
+   </notes>
+  </release>
+  <release>
+   <version>
+    <release>0.8.5</release>
+    <api>0.8.5</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <date>2003-05-27</date>
+   <license uri="http://www.php.net/license">PHP</license>
+   <notes>
+Added methods sampleCentralMoment() and sampleRawMoment() to
+calculate the corresponding nth moments of the data set.
+Explicit casting of parameters passed to pow() to 
+circumvent the warnings/errors given by some versions
+of the PHP interpreter. Thanks to Stephen Evans for
+pointing this problem out.
+   </notes>
+  </release>
+  <release>
+   <version>
+    <release>0.9.0beta1</release>
+    <api>0.9.0beta1</api>
+   </version>
+   <stability>
+    <release>beta</release>
+    <api>beta</api>
+   </stability>
+   <date>2003-06-02</date>
+   <license uri="http://www.php.net/license">PHP</license>
+   <notes>
+This is a beta release that containes new not thoroughly tested methods and
+algorithms.
+
+Many changes in the existing methods, and a number of new ones:
+
+- Added better error handling.
+- Refactored existing methods to delegate calculations better
+- Added value caching for invariant statistical parameters
+- Added optional parameters to some existing methods to enhance their
+  processing or output. Preserve the original behaviour as default so
+  as not breack backwards compatibility
+- Added new methods:
+  - center()
+  - studentize()
+  - range()
+  - geometricMean()
+  - harmonicMean()
+  - product()
+  - productN()
+  - percentile()
+  - quartiles()
+  - interquartileMean()
+  - interquartileRange()
+  - quartileDeviation()
+  - quartileVariationCoefficient()
+  - quartileSkewnessCoefficient()
+- Added a unit test class based on PEAR::PHPUnit
+   </notes>
+  </release>
+  <release>
+   <version>
+    <release>0.9.0beta2</release>
+    <api>0.9.0beta2</api>
+   </version>
+   <stability>
+    <release>beta</release>
+    <api>beta</api>
+   </stability>
+   <date>2003-06-04</date>
+   <license uri="http://www.php.net/license">PHP</license>
+   <notes>
+This is a bug fix release. Fixes (finally) an old bug in calculation of the
+median. Users of any previous version are recommended to upgrade.
+
+When I fixed a previous bug in the calculation of the median, I forgot to apply
+the full fix, so it was calculating an erroneous value for data sets with an 
+odd number of entries.
+
+Thanks to Diego Puga for pointing this out. It is good to get bug reports
+when one is getting old and forgetful. ;-)
+   </notes>
+  </release>
+  <release>
+   <version>
+    <release>0.9.0</release>
+    <api>0.9.0</api>
+   </version>
+   <stability>
+    <release>beta</release>
+    <api>beta</api>
+   </stability>
+   <date>2010-10-04</date>
+   <license uri="http://www.php.net/license">PHP</license>
+   <notes>
+QA release
+Updated svn structure
+Unit tests updated to phpunit 3.4
+Bug #3315 frequency() generates notices
+Bug #6252 Calculation of frequency gives an E_NOTICE
+Bug #12465 Median formula incorrect
+</notes>
+  </release>
+  <release>
+   <version>
+    <release>0.9.1</release>
+    <api>0.9.0</api>
+   </version>
+   <stability>
+    <release>beta</release>
+    <api>beta</api>
+   </stability>
+   <date>2010-10-04</date>
+   <license uri="http://www.php.net/license">PHP</license>
+   <notes>
+QA release
+Bug #17924 	frequency and test suite broken
+   </notes>
+  </release>
+ </changelog>
+</package>

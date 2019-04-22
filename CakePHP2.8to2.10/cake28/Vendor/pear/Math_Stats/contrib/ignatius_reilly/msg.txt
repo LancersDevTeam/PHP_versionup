@@ -1,0 +1,20 @@
+From: "Ignatius Reilly" <ignatius.reilly@free.fr>
+To: "Jesus Castagnetto" <jesus_castagnetto@yahoo.com>
+Subject: Re: Articles added to phpmath.com site
+Date: Fri, 11 Jul 2003 22:22:52 +0200
+
+Hi Jesus,
+
+Because I needed it for some project, I wrote PHP functions giving the
+cumulated standard normal distribution and its inverse.
+You will find the source attached.
+You may feel free to add those functions to a future version of your
+PEAR
+package if you deem it useful/ appropriate.
+(quite basic hack - I do not claim any copyright)
+
+Note: the names I provisionnally gave to those functions are the Excel
+function names.
+
+Best regards
+Ignatius Reilly

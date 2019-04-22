@@ -1,0 +1,19 @@
+<phpunit bootstrap="./tests/bootstrap.php"
+         colors="true"
+         convertErrorsToExceptions="true"
+         convertNoticesToExceptions="true"
+         convertWarningsToExceptions="true"
+>
+    <testsuite name="Math_Stats">
+        <directory suffix=".php">./tests</directory>
+    </testsuite>
+    <filter>
+        <whitelist>
+            <directory>./</directory>
+                <exclude>
+                    <directory>./vendor</directory>
+                    <directory>./tests</directory>
+                </exclude>
+        </whitelist>
+    </filter>
+</phpunit>

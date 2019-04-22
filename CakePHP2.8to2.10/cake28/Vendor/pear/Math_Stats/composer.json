@@ -1,0 +1,28 @@
+{
+	"authors": [{
+		"email": "jmcastagnetto@php.net",
+		"name": "Jesus M. Castagnetto",
+		"role": "Lead"
+	}],
+	"autoload": {
+		"psr-0": {
+			"PEAR\\Math": "./"
+		}
+	},
+	"description": "More info available on: http://pear.php.net/package/Math_Stats",
+
+	"license": "PHP",
+	"name": "pear/math_stats",
+	"support": {
+		"issues": "http://pear.php.net/bugs/search.php?cmd=display&package_name[]=Math_Stats",
+		"source": "https://github.com/pear/Math_Stats"
+	},
+	"type": "library",
+	"require": {
+		"php": ">=5.3.3",
+		"pear/pear_exception": "*"
+	},
+	"require-dev": {
+		"phpunit/phpunit": "*"
+	}
+}

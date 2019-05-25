@@ -1,0 +1,123 @@
+# トランザクションの入れ子はcake1とcake2で挙動が違う
+
+## 問題
+
+```php
+try {
+  $this->FooModel->begin();
+  try {
+    $this->BarModel->begin();
+    // ゴニョゴニョ
+    $this->BarModel->commit();
+  } catch (Exception $e) {
+    $this->BarModel->rollback();
+  }
+  $this->FooModel->commit();
+} catch (Exception $e) {
+  $this->FooModel->rollback();
+}
+```
+
+上記コードにて`$this->BarModel->commit()`を行うとどうなるでしょうか。
+
+- A: BarModelだけcommitされる
+- B: FooModelもBarModelもcommitされる
+- C: 何も起きない
+
+## 答え
+
+cake13とcake28で挙動が違います。
+
+### 答え: cake13の場合
+
+cake1系はトランザクションの入れ子をサポートしていません。
+よって答えは「B: FooModelもBarModelもcommitされる」です。
+
+【ソースコード】
+cake/libs/model/datasources/dbo_source.php
+```php
+function commit(&$model) {
+  if (parent::commit($model) && $this->execute($this->_commands['commit'])) {
+    $this->_transactionStarted = false;
+    return true;
+  }
+  return false;
+}
+```
+
+`parent::commit()`はフラグを見ているだけ。
+
+```php
+function commit(&$model) {
+  return $this->_transactionStarted;
+}
+```
+
+### 答え: cake28の場合(デフォルト)
+
+cake2系からトランザクションの入れ子がサポートされました。
+デフォルトの場合は「C: 何も起きない」です。
+入れ子になっている場合は、一番外側(最後)のcommit/rollbackで実際に実行されます。
+(上記サンプルだと`$this->FooModel->commit()`)
+
+【ソースコード】
+app/vendors/composers/cakephp/cakephp/lib/Cake/Model/Datasource/DboSource.php
+```php
+public function commit() {
+  if (!$this->_transactionStarted) {
+    return false;
+  }
+
+  if ($this->_transactionNesting === 0) {
+    if ($this->fullDebug) {
+      $this->took = $this->numRows = $this->affected = false;
+      $this->logQuery('COMMIT');
+    }
+    $this->_transactionStarted = false;
+    return $this->_connection->commit();
+  }
+
+  if ($this->nestedTransactionSupported()) {
+    return $this->_commitNested();
+  }
+
+  $this->_transactionNesting--;
+  return true;
+}
+```
+
+`$this->_transactionNesting === 0`の時だけ実行されて、それ以外はカウンタを減らすだけです。
+
+### 答え: cake28の場合(DBのSAVEPOINTを使う場合)
+
+上記コードのこの部分。
+
+```php
+if ($this->nestedTransactionSupported()) {
+  return $this->_commitNested();
+}
+```
+
+(PHPではなく)DBがトランザクションの入れ子をサポートしている場合、該当するDBの処理を実行してくれます。
+(MySQLなら`SAVEPOINT`構文)
+
+ただこの`nestedTransactionSupported()`はこうなっています。
+app/vendors/composers/cakephp/cakephp/lib/Cake/Model/Datasource/Database/Mysql.php
+```php
+public function nestedTransactionSupported() {
+  return $this->useNestedTransactions && version_compare($this->getVersion(), '4.1', '>=');
+}
+```
+
+で`$this->useNestedTransactions`はデフォルト`false`です。つまり使えません。
+この部分を有効にしたい場合は自分で`true`にする必要があるようです。
+
+参考: https://book.cakephp.org/2.0/ja/models/transactions.html#id2
+
+> ネスト化されたトランザクションはデフォルトでは利用不可となっています。これを使うためには、 $dataSource->useNestedTransactions = true; として下さい。
+
+## 補足
+
+というのが僕の理解ですが、「違うよ！」という情報があればお教えください。
+
+ちなみにこの「カウンタが0になったら実行する」というパターン、PerlのDBライブラリもそうだったし、(記憶違いかもだけど)Laravelもそうなっていた気がする。一般的なパターンなのかな。

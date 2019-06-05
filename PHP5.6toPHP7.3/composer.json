@@ -1,0 +1,61 @@
+{
+  "require": {
+    "aws/aws-sdk-php": "3.*",
+    "ashiina/socket.io-emitter": "^0.8.0",
+    "cakephp/cakephp": "2.*",
+    "cakephp/debug_kit": "2.*",
+    "fabpot/goutte": "3.*",
+    "facebook/graph-sdk": "5.*",
+    "firebase/php-jwt": "5.*",
+    "mockery/mockery": "1.*",
+    "monolog/monolog": "1.*",
+    "nesbot/carbon": "2.*",
+    "phpmailer/phpmailer": "6.*",
+    "phpoffice/phpspreadsheet": "1.*",
+    "predis/predis": "1.*",
+    "twig/twig": "~1.39.1",
+    "woothee/woothee": "*"
+  },
+  "require-dev": {
+    "friendsofphp/php-cs-fixer": "*",
+    "phpunit/phpunit": "^5.7",
+    "psy/psysh": "*"
+  },
+  "autoload": {
+    "classmap": [
+      "cake28/Lib/Entities/",
+      "cake28/Lib/LWorkFactory.php",
+      "cake28/Lib/Services/"
+    ],
+    "files": [
+      "cake28/Lib/Functions/Browsers.php",
+      "cake28/Lib/Functions/Changedbdestination.php",
+      "cake28/Lib/Functions/Convert.php",
+      "cake28/Lib/Functions/Crypt.php",
+      "cake28/Lib/Functions/Devices.php",
+      "cake28/Lib/Functions/PriceCalculations.php",
+      "cake28/Lib/Functions/Servers.php"
+    ],
+    "psr-4": {
+      "App\\Lib\\": "cake28/Lib/",
+      "Test\\App\\Lib\\": "cake28/Test/Lib"
+    }
+  },
+  "autoload-dev": {
+    "classmap": [
+      "cake28/Config/fixtures.php"
+    ]
+  },
+  "config": {
+    "bin-dir": "bin",
+    "vendor-dir": "vendor"
+  },
+  "extra": {
+    "installer-paths": {
+      "cake28/Plugin/{$name}/": ["type:cakephp-plugin"]
+    }
+  },
+  "include-path": [
+    "vendor/cakephp/cakephp/lib"
+  ]
+}

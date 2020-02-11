@@ -1,4 +1,4 @@
-## 継承メソッドは、戻り値を明示的に書かないとコケる
+## 継承メソッドは戻り値を明示的に書かないとコケる
 ```
     public function initialize(array $config)
     {
@@ -12,7 +12,7 @@
     }
 ```
 
-## データ作成時のnewEntityメソッドの挙動変わった
+## データ作成時のnewEntityメソッドの挙動が変わった
 
 NG newEntityとpatchEntityの組み合わせだった。
 ```

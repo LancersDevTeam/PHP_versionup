@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+CakePHP3で使用するphpunit.xml
+
+CakePHP2で使用しているphpunit.xmlでCakePHP3の設定をするとエラーが生じるためファイルを分けている
+-->
+<phpunit
+    bootstrap="cake28/Test/bootstrap.php"
+>
+    <listeners>
+        <listener
+                class="\Cake\TestSuite\Fixture\FixtureInjector">
+            <arguments>
+                <object class="\Cake\TestSuite\Fixture\FixtureManager" />
+            </arguments>
+        </listener>
+    </listeners>
+</phpunit>

@@ -62,3 +62,8 @@ template
 ↓
 \Cake\Database\DriverInterface
 ```
+```
+Event
+↓
+EventInterface
+```

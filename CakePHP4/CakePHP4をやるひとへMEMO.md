@@ -47,14 +47,18 @@ $article = $this->Articles->newEntity($this->request->getData());
 
 ### ディレクトリの位置が変更された
 
+```
 src/Template
 ↓
 template
+```
 
 ## 拡張子が ctpからphpになった
 
 ## その他
 
+```
 \Cake\Database\Driver
 ↓
 \Cake\Database\DriverInterface
+```

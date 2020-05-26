@@ -1,3 +1,7 @@
+#      - run:
+#          name: 'CakePHP2.8 Check'
+#          command: ruby -Ku .circleci/cakephp2.rb
+
 #!/bin/env ruby
 # coding: utf-8
 

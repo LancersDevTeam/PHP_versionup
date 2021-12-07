@@ -9,4 +9,6 @@
   - $this-Form->controlに置き換え
 - $validator->notEmpty
   - $validator->notEmptyString等に置き換え
+- loadModel （CakePHP4.3からDeprecated）
+  - fetchTableに置き換える 
   

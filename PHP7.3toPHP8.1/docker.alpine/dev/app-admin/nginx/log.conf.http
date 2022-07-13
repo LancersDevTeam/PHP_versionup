@@ -1,0 +1,26 @@
+fastcgi_hide_header "X-User-ID";
+fastcgi_hide_header "X-User-Email";
+fastcgi_hide_header "X-Alternative-Login-ID";
+
+map $http_user_agent $log_ua {
+    ~ELB-HealthChecker 0;
+    default 1;
+}
+
+ log_format main 'time:$time_iso8601\t'
+                'server_addr:$server_addr\t'
+                'host:$remote_addr\t'
+                'method:$request_method\t'
+                'reqsize:$request_length\t'
+                'uri:$request_uri\t'
+                'query:$query_string\t'
+                'status:$status\t'
+                'size:$body_bytes_sent\t'
+                'referer:$http_referer\t'
+                'ua:$http_user_agent\t'
+                'forwardedfor:$http_x_forwarded_for\t'
+                'reqtime:$request_time\t'
+                'apptime:$upstream_response_time\t'
+                'user_id:$upstream_http_x_user_email\t'
+                'request_body:$request_body\t'
+;

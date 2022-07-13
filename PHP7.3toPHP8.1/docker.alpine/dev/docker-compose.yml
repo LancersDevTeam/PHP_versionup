@@ -1,0 +1,26 @@
+version: '2'
+
+services:
+  app_admin:
+    build: app-admin
+    image: lancers-admin
+    hostname: app_admin
+    networks:
+      lancers:
+        ipv4_address: 10.100.106.102
+    extra_hosts:
+       - "dev.lancers.jp:10.100.50.11"
+       - "dev-info.lancers.jp:10.100.50.11"
+       - "dev-hosting.lancers.jp:10.100.50.11"
+       - "dev-hydra.lancers.jp:10.100.50.11"
+       - "dev-img.lancers.jp:10.100.50.11"
+       - "dev-krgn.lancers.jp:10.100.50.11"
+       - "dev-sendgrid.lancers.jp:10.100.50.11"
+       - "dev-static.lancers.jp:10.100.50.11"
+    container_name: lancers-admin
+    volumes:
+      - ~/www:/var/www:cached
+    privileged: true
+networks:
+  lancers:
+    external: true

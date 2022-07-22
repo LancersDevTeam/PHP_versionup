@@ -53,10 +53,11 @@ COPY nginx/log.conf.http /etc/nginx/conf.d/log.conf.http
 COPY nginx/nginx.conf /etc/nginx/nginx.conf
 
 # PHP
-COPY php/php.ini /etc/php.ini
-COPY php/10-opcache.ini /etc/php.d/10-opcache.ini
-COPY php/15-xdebug.ini /etc/php.d/15-xdebug.ini
-COPY php/40-apcu.ini /etc/php.d/40-apcu.ini
+COPY php/php.ini /etc/php/8.1/fpm/php.ini
+COPY php/php.ini /etc/php/8.1/cli/php.ini
+COPY php/apcu.ini /etc/php/8.1/mods-available/apcu.ini
+COPY php/opcache.ini /etc/php/8.1/mods-available/opcache.ini
+COPY php/xdebug.ini /etc/php/8.1/mods-available/xdebug.ini
 # PHP-FPM
 COPY php-fpm/php-fpm.conf /etc/php-fpm.conf
 COPY php-fpm/www.conf /etc/php-fpm.d/www.conf

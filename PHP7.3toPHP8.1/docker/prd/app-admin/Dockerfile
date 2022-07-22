@@ -46,9 +46,11 @@ COPY docker/prd/app-admin/nginx/log.conf.http /etc/nginx/conf.d/log.conf.http
 COPY docker/prd/app-admin/nginx/nginx.conf /etc/nginx/nginx.conf
 
 # PHP
-COPY docker/prd/app-admin/php/php.ini /etc/php.ini
-COPY docker/prd/app-admin/php/10-opcache.ini /etc/php.d/10-opcache.ini
-COPY docker/prd/app-admin/php/40-apcu.ini /etc/php.d/40-apcu.ini
+COPY docker/prd/app-admin/php/php.ini /etc/php/8.1/fpm/php.ini
+COPY docker/prd/app-admin/php/php.ini /etc/php/8.1/cli/php.ini
+COPY docker/prd/app-admin/php/apcu.ini /etc/php/8.1/mods-available/apcu.ini
+COPY docker/prd/app-admin/php/opcache.ini /etc/php/8.1/mods-available/opcache.ini
+
 # PHP-FPM
 COPY docker/prd/app-admin/php-fpm/php-fpm.conf /etc/php-fpm.conf
 COPY docker/prd/app-admin/php-fpm/www.conf /etc/php-fpm.d/www.conf
